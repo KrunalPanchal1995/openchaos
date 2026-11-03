@@ -22,7 +22,7 @@
 A grandfather clock swings the same way every time: if you know how it starts, you know where it will be in an hour. Hang a second pendulum from the end of the first and the motion looks random. Is it really random, or does it follow rules we simply cannot follow far enough? Release two double pendulums with starting angles that differ by one hundred-millionth of a radian and see for yourself.
 
 ## B. Concept and theory
-A pendulum is a ball on a rod that swings under gravity. Its angle theta, measured from straight down, obeys theta'' = -(g / L) sin(theta): the pull of gravity back towards the bottom is proportional to sin(theta). For small swings sin(theta) is about theta and the swing time is T = 2 pi sqrt(L / g). A double pendulum has a second rod hung from the first ball, so two angles (theta1 for the upper rod, theta2 for the lower rod) and two angular speeds describe it; the lower ball is pulled by gravity and by the motion of the upper one. The rule is exact and has no randomness: the same start always gives the same motion. What changes is the sensitivity: we run two copies whose start differs by a tiny amount and track the gap between them. In the single pendulum the gap stays tiny. In the double pendulum it grows by roughly the same factor in every equal time interval, so it explodes after a few seconds. This is called sensitive dependence on initial conditions.
+A pendulum is a ball on a rod that swings under gravity. Its angle theta, measured from straight down, obeys theta'' = -(g / L) sin(theta), where theta'' is how fast the angular speed changes: the pull of gravity back towards the bottom is proportional to sin(theta). For small swings sin(theta) is about theta and the swing time is T = 2 pi sqrt(L / g). A double pendulum has a second rod hung from the first ball, so two angles (theta1 for the upper rod, theta2 for the lower rod) and two angular speeds describe it; the lower ball is pulled by gravity and by the motion of the upper one. The rule is exact and has no randomness: the same start always gives the same motion. What changes is the sensitivity: we run two copies whose start differs by a tiny amount and track the gap between them. In the single pendulum the gap stays tiny. In the double pendulum it grows by roughly the same factor in every equal time interval, so it explodes after a few seconds. This is called sensitive dependence on initial conditions.
 
 | Symbol | Meaning | Unit |
 |---|---|---|
@@ -38,8 +38,8 @@ A pendulum is a ball on a rod that swings under gravity. Its angle theta, measur
 
 - No friction or air resistance: rods are rigid and light, the balls are points of 1 kg each, both rods are 1 m long.
 - Angles are measured from straight down; every start is at rest (zero angular speeds).
-- Both twins are run by the same numerical rule (RK4 with step 0.005 s), so the gap measures how sensitive the motion is; Session 3 shows how the solver's own error limits how long one run follows the true motion.
-- A radian is the angle unit used by the computer: 1 degree is 0.01745 rad.
+- Both copies (the twins) are run by the same numerical rule (RK4 with step 0.005 s), so the gap measures how sensitive the motion is; Session 3 shows how the solver's own error limits how long one run follows the true motion.
+- All angles are in radians (1 degree is 0.01745 rad).
 
 $$ \ddot\theta=-\frac{g}{L}\sin\theta,\qquad T\approx 2\pi\sqrt{\frac{L}{g}}\ \text{(small swings)} $$
 
@@ -90,6 +90,7 @@ Ask whether the same start always gives the same motion, and what the gap graph 
 The motion looks random but is not: the equations are exact and the same start always gives the same motion (it is deterministic). What is true is that the motion is extremely sensitive to the start: a difference of 1e-8 rad grows to more than 0.1 rad in about 13 s, so we cannot predict it far ahead unless we know the start almost perfectly. Chaos means unpredictable in practice, not lawless.
 
 </details>
+
 **Question type B: Numerical.** Find the swing time of a pendulum 0.25 m long with the formula T = 2 pi sqrt(L / g). Is it more or less than the 1 m pendulum, and by what factor?
 
 <details>
@@ -105,6 +106,7 @@ Put L = 0.25 m and g = 9.81 m/s^2 into the formula; then compare with 2.006 s.
 L / g = 0.25 / 9.81 = 0.02548 s^2, sqrt = 0.1596 s, T = 2 pi x 0.1596 = 1.003 s. It is half of 2.006 s: four times shorter gives half the swing time (T goes as the square root of L). Units: seconds.
 
 </details>
+
 **Question type C: Graph and simulation interpretation.** On the gap graph, the double pendulum's gap grows from 3.2e-4 rad at 10 s to 0.62 rad at 15 s. By what factor does it grow in those 5 s, and what is the growth rate per second?
 
 <details>
@@ -120,6 +122,7 @@ Divide the two gaps, then take the natural logarithm and divide by 5 s.
 The factor is 0.62 / 3.2e-4 = about 1950. The natural logarithm of 1950 is 7.58, so the rate is 7.58 / 5 s = 1.5 per second (the gap multiplies by about 4.5 every second). This rate, called the Lyapunov exponent, is measured properly in Session 3.
 
 </details>
+
 **Question type D: Design and optimisation challenge.** Design: you may measure the starting angle with a protractor of precision 1e-3 rad. Using a growth rate of 1.5 per second, how long can you forecast to within 0.1 rad? What precision would 10 s need? State your assumption.
 
 <details>
