@@ -2,18 +2,18 @@
 
 [![Checks](https://github.com/KrunalPanchal1995/openchaos/actions/workflows/ci.yml/badge.svg)](https://github.com/KrunalPanchal1995/openchaos/actions/workflows/ci.yml) ![License: MIT](https://img.shields.io/badge/license-MIT-green?style=flat-square) ![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue?style=flat-square) [![Open in Colab](https://img.shields.io/badge/Colab-session%201-F9AB00?style=flat-square&logo=googlecolab&logoColor=white)](https://colab.research.google.com/github/KrunalPanchal1995/openchaos/blob/main/sessions/session-01/lesson.ipynb) [![Live apps](https://img.shields.io/badge/live-apps-1f6feb?style=flat-square)](https://krunalpanchal1995.github.io/openchaos/)
 
-**See chaos in a double pendulum, in three sessions.**
+**See chaos in a double pendulum, in four sessions.**
 
 openchaos teaches how a perfectly deterministic pendulum becomes unpredictable, from one swinging rod to Lyapunov exponents and a map of chaos, using only Python and a browser.
 
 - **Start from one pendulum.** Session 1 needs only school trigonometry and shows chaos by experiment before any theory.
 - **See it diverge.** Every session ships a slider app that runs in the browser, with labelled graphs.
 - **Know the answer is right.** Each session ends with a checkpoint that tests energy conservation, the small-angle limit and hand calculations.
-- **Build the missing half.** The repo stops at Session 3 on purpose; the roadmap shows the path to the Target.
+- **Build the missing half.** The repo stops at Session 4 on purpose; the roadmap shows the path to the Target.
 
 [Target](#the-target) · [Who is this for](#who-is-this-for) · [Quick start](#quick-start) · [Sessions](#sessions) · [Roadmap](#roadmap) · [Contribute](#contribute) · [Explainer PDF](docs/explainer.pdf)
 
-> **This repo is incomplete on purpose.** Sessions 1 to 3 are here and fully working. The finished Target below is a preview of what the community can build next. We show you the path, not the code. Sessions 4 and up are yours.
+> **This repo is incomplete on purpose.** Sessions 1 to 4 are here and fully working. The finished Target below is a preview of what the community can build next. We show you the path, not the code. Sessions 5 and up are yours.
 
 ## The Target
 
@@ -78,8 +78,9 @@ Every session also opens in your browser with sliders (no install): [live apps](
 | 1 | [Two almost identical starts drift apart](sessions/session-01/README.md) | Level 1: conceptual interactive model | 60 min | [open](https://krunalpanchal1995.github.io/openchaos/session-01/) |
 | 2 | [Equations, energy and a trustworthy simulation](sessions/session-02/README.md) | Level 2: mathematical engineering model | 75 min | [open](https://krunalpanchal1995.github.io/openchaos/session-02/) |
 | 3 | [Measuring chaos and the limits of forecasting](sessions/session-03/README.md) | Level 3: simulation and validation | 90 min | [open](https://krunalpanchal1995.github.io/openchaos/session-03/) |
+| 4 | [A fourth-order symplectic solver](sessions/session-04/README.md) | Level 3: simulation and validation | 90 min | [open](https://krunalpanchal1995.github.io/openchaos/session-04/) |
 
-Each session follows the same six steps: A real-world problem, B concept and theory, C visual explanation, D interactive simulation, E worked example and experiment, F assessment and design challenge. Each ends with `checkpoint.py`, which prints `PASS` or `FAIL` against reference numbers. Session 3 also contains the real-world mini-project: **How long can you forecast a double pendulum?**.
+Each session follows the same six steps: A real-world problem, B concept and theory, C visual explanation, D interactive simulation, E worked example and experiment, F assessment and design challenge. Each ends with `checkpoint.py`, which prints `PASS` or `FAIL` against reference numbers. Sessions 3 and 4 contain the real-world mini-projects: **How long can you forecast a double pendulum?** and **Pick the cheapest solver for a long pendulum run**.
 
 ## Architecture
 
@@ -88,14 +89,15 @@ flowchart LR
   S1[Session 1<br/>Two almost identical starts drift apart]
   S2[Session 2<br/>Equations, energy and a trustworthy simulation]
   S3[Session 3<br/>Measuring chaos and the limits of forecasting]
-  R[Roadmap S4+<br/>YOU build this]
+  S4[Session 4<br/>A fourth-order symplectic solver]
+  R[Roadmap S5+<br/>YOU build this]
   T((Target))
-  S1 --> S2 --> S3 --> R --> T
+  S1 --> S2 --> S3 --> S4 --> R --> T
 ```
 
 | Folder or file | What is inside |
 |---|---|
-| `sessions/` | three sessions: README (A-F), `lesson.py`, notebook, live app, exercises, activity sheet, checkpoint |
+| `sessions/` | four sessions: README (A-F), `lesson.py`, notebook, live app, exercises, activity sheet, checkpoint |
 | `promo/` | the Target: media, live links, and the roadmap (path only) |
 | `docs/` | `explainer.tex` and the built `explainer.pdf` |
 | `tests/` | runs every lesson and checkpoint headless |
@@ -107,7 +109,6 @@ flowchart LR
 
 | Milestone | What you will build | Difficulty |
 |---|---|---|
-| Session 4: A fourth-order symplectic solver | A solver whose energy error stays bounded and small at a coarse step. | intermediate |
 | Session 5: The full Lyapunov spectrum | All four exponents of the 120 degree release instead of the largest one only. | advanced |
 | Session 6: Ensemble forecasts | 1000 forecasts from a Gaussian cloud of start errors of 1e-6 rad. | intermediate |
 | Session 7: A damped, real pendulum | A damped model and a fit routine run on a synthetic measurement. | intermediate |

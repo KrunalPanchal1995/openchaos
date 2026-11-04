@@ -10,7 +10,7 @@
 \setlength{\parindent}{0pt}
 \begin{document}
 
-\begin{center}{\LARGE\bfseries openchaos}\\[0.4em]{\large See chaos in a double pendulum, in three sessions.}\\[0.2em]\small PAN IIT OSS explainer \textbullet{} secondary school to diploma / undergraduate (levels 3-5)\end{center}
+\begin{center}{\LARGE\bfseries openchaos}\\[0.4em]{\large See chaos in a double pendulum, in four sessions.}\\[0.2em]\small PAN IIT OSS explainer \textbullet{} secondary school to diploma / undergraduate (levels 3-5)\end{center}
 
 \section*{Why this exists}
 A double pendulum obeys exact equations, yet two starts a hundred-millionth of a radian apart end up in completely different places within about fifteen seconds. This explainer shows the mathematics behind that: the equations of motion, the energy checks that prove a simulation right, and the Lyapunov exponent that says how fast errors grow.
@@ -18,11 +18,12 @@ A double pendulum obeys exact equations, yet two starts a hundred-millionth of a
 \section*{The end goal}
 See chaos in a double pendulum. The end goal is to see chaos in a double pendulum: to watch two almost identical motions diverge, to measure the rate of divergence, and to say honestly how long a forecast can be trusted. The same ideas limit weather forecasts, orbit predictions and the control of robot arms.
 
-\section*{How the three sessions build up}
+\section*{How the four sessions build up}
 \begin{enumerate}[nosep]
 \item \textbf{Session 1: Two almost identical starts drift apart} (Level 1, conceptual interactive model, 60 min).
 \item \textbf{Session 2: Equations, energy and a trustworthy simulation} (Level 2, mathematical engineering model, 75 min).
 \item \textbf{Session 3: Measuring chaos and the limits of forecasting} (Level 3, simulation and validation, 90 min).
+\item \textbf{Session 4: A fourth-order symplectic solver} (Level 3, simulation and validation, 90 min).
 \end{enumerate}
 
 \section{Session 1: Two almost identical starts drift apart}
@@ -193,12 +194,70 @@ A lab measures the starting angles of a double pendulum to 1e-6 rad. If lambda =
 \item \textbf{Design and optimisation challenge.} Design: you want a 15 s forecast within 0.1 rad for the 120 degree release (lambda about 1.43 per second). What start precision does the formula demand? Is it realistic for a rotary encoder of 1e-5 rad resolution? What would you do instead?
 \end{enumerate}
 
+\section{Session 4: A fourth-order symplectic solver}
+
+\subsection*{A. Real-world problem}
+Satellite orbits, molecules and planets are simulated for billions of steps, so the solver must not leak energy and must also be accurate. In Session 3 the implicit midpoint rule kept the energy error of the double pendulum bounded, but with h = 0.02 s that error still reaches a few percent of the energy scale. Can we do better without making the step tiny? Today we build a fourth-order symplectic solver from the midpoint rule, check that it really is fourth order, count what it costs, and find out where it stops working.
+
+\subsection*{B. Concept and theory}
+The implicit midpoint rule is symplectic and symmetric (a step forward by h followed by a step back by h returns to the start), and its error per step starts with an h\textasciicircum{}3 term, which makes it second order. A \textbf{composition} applies it several times with different step sizes: three steps of sizes gamma1 h, gamma0 h and gamma1 h in a row. The result is still symplectic (a chain of symplectic steps is symplectic) and still symmetric. Two conditions fix the sizes: they must add up to one step, 2 gamma1 + gamma0 = 1, and the h\textasciicircum{}3 error terms must cancel, 2 gamma1\textasciicircum{}3 + gamma0\textasciicircum{}3 = 0. The solution is gamma1 = 1 / (2 - 2\textasciicircum{}(1/3)) = 1.3512 and gamma0 = -2\textasciicircum{}(1/3) / (2 - 2\textasciicircum{}(1/3)) = -1.7024, so one step goes forward 1.35 h, \textbf{backward} 1.70 h, then forward 1.35 h. The sub-steps are a mathematical device, not moments of physical time. With the h\textasciicircum{}3 term gone the method is fourth order: halving h should divide the error by 16 instead of 4. The price is work: one step is three midpoint solves, and each solve repeats a substitution until it settles. That substitution only settles when h times the fastest rate of change is small, and the middle solve uses the largest step (1.70 h), so the composition stops working at a smaller h than the midpoint rule. We count work as the number of evaluations of the rate function, and because this pendulum is chaotic we report the typical largest energy error: the median, over five starts nudged by about 1e-9, of the largest |E - E0| / E\_ref.
+
+\begin{itemize}[nosep]
+\item h: time step (s)
+\item gamma1, gamma0: relative sizes of the three sub-steps (none)
+\item p: order of the method (error shrinks like h\textasciicircum{}p) (none)
+\item E, E0: energy now and at the start (J)
+\item E\_ref: energy scale 3 g, equal to 29.43 J (J)
+\item work: number of evaluations of the rate function (none)
+\end{itemize}
+
+\begin{equation*}
+2\gamma_1+\gamma_0=1,\qquad 2\gamma_1^3+\gamma_0^3=0\ \Longrightarrow\ \gamma_1=\frac{1}{2-2^{1/3}},\ \ \gamma_0=-\frac{2^{1/3}}{2-2^{1/3}}
+\end{equation*}
+
+\begin{equation*}
+\Phi_h=\Phi^{(2)}_{\gamma_1 h}\circ\Phi^{(2)}_{\gamma_0 h}\circ\Phi^{(2)}_{\gamma_1 h}\quad\text{(order 4 and symplectic)}
+\end{equation*}
+
+\begin{equation*}
+\text{error}\approx C h^p\ \Longrightarrow\ p\approx\log_2\frac{\text{error}(h)}{\text{error}(h/2)}
+\end{equation*}
+
+\begin{center}\includegraphics[width=0.95\linewidth]{figures/s04_energy_1000s.png}\\\small Energy error of RK4, the midpoint rule and the composition over 1000 s at h = 0.02 s (one run).\end{center}
+
+\begin{center}\includegraphics[width=0.75\linewidth]{figures/s04_order_test.png}\\\small Order test: slope 2 for the midpoint rule, slope 4 for the composition.\end{center}
+
+\begin{center}\includegraphics[width=0.95\linewidth]{figures/s04_work_precision.png}\\\small Accuracy against work: the midpoint rule is cheaper for loose energy limits, the composition for tight ones.\end{center}
+
+\begin{center}\includegraphics[width=0.75\linewidth]{figures/s04_step_limit.png}\\\small The composition gives up at a smaller step than the midpoint rule.\end{center}
+
+\subsection*{E. Worked example}
+Find the three step sizes of the triple jump for h = 0.02 s and check the two order conditions.
+\begin{enumerate}[nosep]
+\item 2\textasciicircum{}(1/3) = 1.259921, so 2 - 2\textasciicircum{}(1/3) = 0.740079.
+\item gamma1 = 1 / 0.740079 = 1.351207.
+\item gamma0 = -2\textasciicircum{}(1/3) gamma1 = -1.259921 x 1.351207 = -1.702414.
+\item Sum: 2 x 1.351207 - 1.702414 = 1.000000. Cubes: gamma1\textasciicircum{}3 = 2.467, so 2 gamma1\textasciicircum{}3 = 4.934, and gamma0\textasciicircum{}3 = -4.934; the sum is 0.
+\item For h = 0.02 s the sub-steps are 0.027024 s, -0.034048 s and 0.027024 s, which add up to 0.02 s.
+\item Check with the simulation: halving h from 0.025 s to 0.0125 s divides the error by 15.9, so the observed order is 3.99.
+\end{enumerate}
+\textbf{Answer.} The sizes are 1.3512 h, -1.7024 h and 1.3512 h, here 0.027024 s, -0.034048 s and 0.027024 s; the middle sub-step goes back 1.26 times as far as each outer sub-step goes forward.
+
+\subsection*{F. Questions}
+\begin{enumerate}[nosep]
+\item \textbf{Conceptual.} A classmate says: \texttt{}The fourth-order solver is simply better than the midpoint rule: it is just as symplectic and much more accurate.'' Give two reasons why this is too simple.
+\item \textbf{Numerical.} At h = 0.05 s the composition's state error after 0.4 s is 2.75e-4. Predict the error at h = 0.0125 s, and compare the number of midpoint solves per second of simulated time at the two steps. Give a sanity check.
+\item \textbf{Graph and simulation interpretation.} Figure 3 (left) gives, for the typical largest energy error over 60 s, 43,328 evaluations for the midpoint rule and 121,330 for the composition at 1e-2, and for 1e-4 only the composition (192,125). Which solver would you choose for each limit? Why does the composition's curve fall so much faster as the work grows?
+\item \textbf{Design and optimisation challenge.} Design: you need the typical largest energy error of the 120 degree release over 60 s to stay below 1e-4 of E\_ref, with a budget of 200,000 rate evaluations. Choose a solver and a step, check your margin against the step at which the solver fails, and say what you would re-test if the pendulum were released from 150 degrees.
+\end{enumerate}
+
 \section{Real-world mini-project}
-\textbf{How long can you forecast a double pendulum?.} A lab can measure the two starting angles of a double pendulum to within 1e-6 rad. Released from rest with both rods at 100, 120 or 140 degrees, for how long does a forecast stay within 0.1 rad of the true motion? Use \texttt{benettin}, \texttt{predicted\_horizon} and \texttt{median\_horizon} from Session 3 (20 random error directions, seed 7).
+\textbf{How long can you forecast a double pendulum?} A lab can measure the two starting angles of a double pendulum to within 1e-6 rad. Released from rest with both rods at 100, 120 or 140 degrees, for how long does a forecast stay within 0.1 rad of the true motion? Use \texttt{benettin}, \texttt{predicted\_horizon} and \texttt{median\_horizon} from Session 3 (20 random error directions, seed 7).
+
+\textbf{Pick the cheapest solver for a long pendulum run.} You must simulate the 120 degree release for 60 s and keep the typical largest energy error (median over 5 nearby starts, sampled once per second) below 1e-2, 1e-3 or 1e-4 of E\_ref. Use \texttt{ladder\_results} and \texttt{cheapest\_for\_tolerance} with the steps [0.015, 0.0075, 0.0025] for the midpoint rule and [0.02, 0.015, 0.01] for the composition, and count work with \texttt{CALLS}. \textbf{Deliverable:} A script that prints, for each of the three tolerances, the cheapest step and number of rate evaluations for each solver (or \texttt{}not reached''), names the cheaper solver, and finally compares the state error after 5 s for the midpoint rule at h = 0.003125 s with the composition at h = 0.0125 s. \textbf{Success looks like:} For 1e-2 the midpoint rule is cheaper (43,328 against 121,330 evaluations) and also for 1e-3 (72,037 against 144,413); for 1e-4 only the composition reaches it (h = 0.01 s, 192,125 evaluations; the midpoint rule's best is 1.3e-4); and for the state after 5 s the composition's error (3.4e-3 with 13,441 evaluations) is about nine times smaller than the midpoint rule's (3.0e-2 with 11,628).
 
 \section{The path ahead}
 \begin{enumerate}[nosep]
-\item \textbf{Session 4: A fourth-order symplectic solver.} A solver whose energy error stays bounded and small at a coarse step.
 \item \textbf{Session 5: The full Lyapunov spectrum.} All four exponents of the 120 degree release instead of the largest one only.
 \item \textbf{Session 6: Ensemble forecasts.} 1000 forecasts from a Gaussian cloud of start errors of 1e-6 rad.
 \item \textbf{Session 7: A damped, real pendulum.} A damped model and a fit routine run on a synthetic measurement.
@@ -229,6 +288,14 @@ A lab measures the starting angles of a double pendulum to 1e-6 rad. If lambda =
 \item \textbf{Numerical.} Hint: t\_h = ln(Delta / delta0) / lambda. Solution: Delta / delta0 = 0.5 / 1e-8 = 5e7, ln(5e7) = 17.73, so t\_h = 17.73 / 1.2 = 14.8 s. Sanity check: with delta0 = 1e-8 and Delta = 0.1 the earlier simulation passed 0.1 rad at about 13 s; a larger tolerance and slightly smaller lambda give a bit more, so 15 s is plausible.
 \item \textbf{Graph and simulation interpretation.} Hint: Slope of ln d: ln(1e-2 / 1e-6) divided by the time between the two points. Solution: ln(1e4) = 9.21 over 6.6 s gives 1.40 per second. The fit (1.21) and Benettin (1.43) differ because the growth rate is not constant along the orbit: the pendulum alternates between phases of fast and slow stretching, so a finite-time estimate depends on the window and the length of the run. Quote lambda with this uncertainty (here about 1.2 to 1.5 per second) and say for which start it was measured.
 \item \textbf{Design and optimisation challenge.} Hint: Solve t\_h = 15 s for delta0: delta0 = Delta exp(-lambda t\_h). Solution: delta0 = 0.1 exp(-1.43 x 15) = 0.1 exp(-21.45) = 4.8e-11 rad, a million times finer than a 1e-5 rad encoder, which would give only about 5 s by the formula. It is not realistic. Alternatives: shorten the horizon you promise, accept 1 rad error (gain ln(10) / 1.43 = 1.6 s only), use repeated measurements to correct the forecast, or forecast the probability of a flip rather than the path. Assumption: friction and the model error are neglected, which would make things worse in reality.
+\end{enumerate}
+
+\subsection*{Session 4}
+\begin{enumerate}[nosep]
+\item \textbf{Conceptual.} Hint: Think about what one step costs, and about the backward sub-step of 1.70 h. Solution: First, cost: one composed step is three midpoint solves (3.4 times the rate evaluations at h = 0.02 s), so for a loose energy limit the cheap rule wins: 43,328 evaluations against 121,330 for 1e-2. The composition pays off only for tight limits (1e-4) or short-time accuracy. Second, robustness: the middle solve uses a step of 1.70 h, so the substitution that solves it stops converging at a smaller h: the composition fails from h = 0.03 s to 0.035 s while the midpoint rule still runs at 0.04 s. A high order is only an advantage when h is small enough for the method to be in its asymptotic regime.
+\item \textbf{Numerical.} Hint: Order 4: the error scales with h\textasciicircum{}4. The step shrinks by a factor 4. Solution: The step shrinks by 4, so the error shrinks by 4\textasciicircum{}4 = 256: 2.75e-4 / 256 = 1.07e-6 (the lesson measures 1.12e-6). Midpoint solves per second: 3 / 0.05 = 60 at h = 0.05 s and 3 / 0.0125 = 240 at h = 0.0125 s, so four times the work buys 256 times less error. Sanity check: the midpoint rule with the same four-fold work would improve only by 4\textasciicircum{}2 = 16.
+\item \textbf{Graph and simulation interpretation.} Hint: Compare the error at h = 0.02 s and at h = 0.01 s for each solver (composition 1.2e-3 and 5.3e-5; midpoint 1.3e-2 and 3.8e-3). Solution: For 1e-2 choose the midpoint rule: it needs 2.8 times fewer evaluations. For 1e-4 the composition is the only one that gets there on this ladder. The composition falls faster because its error depends on a higher power of h: halving h from 0.02 s to 0.01 s divides its typical error by 23 (order about 4), the midpoint rule's by 3.4 (order about 2). A steeper curve starts more expensive but crosses the flatter one at tight limits (here between 1e-4 and 2e-4). Assumption: one release angle and 60 s; the crossing moves with the start and the run length.
+\item \textbf{Design and optimisation challenge.} Hint: Use the ladder results: the midpoint rule's best is 1.3e-4 at 172,221 evaluations; look at the composition at h = 0.01 s. Solution: The composition at h = 0.01 s gives a typical error of 5.3e-5 with 192,125 evaluations: below 1e-4 and inside the 200,000 budget. The midpoint rule does not reach 1e-4 (1.3e-4 with 172,221 evaluations at h = 0.0025 s). The composition starts to fail at h = 0.03 s, three times larger than the chosen step, a reasonable safety margin. A release from 150 degrees has more energy and faster motion, so the safe step is smaller: run the step survey again (error and number of unsettled solves) and, if needed, reduce h and recompute the budget. Assumption: a single release angle and 60 s; a longer run costs proportionally more evaluations.
 \end{enumerate}
 
 \section{How to join}

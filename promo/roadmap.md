@@ -2,16 +2,6 @@
 
 This is the path, not the code. Each milestone says what you learn, what you build, and how you know it works. Pick one and open a pull request. See [CONTRIBUTING.md](../CONTRIBUTING.md).
 
-## Session 4: A fourth-order symplectic solver
-
-**You will learn:** Composition methods: building a higher-order symplectic step from the second-order midpoint rule.
-
-**You will build:** A solver whose energy error stays bounded and small at a coarse step.
-
-**Checkpoint (not met by the shipped code):** Energy error at most 1e-2 of E_ref over 1000 s at h = 0.02 s for the 120 degree release (the shipped midpoint rule gives 0.019 and RK4 gives 0.17).
-
-**Difficulty:** intermediate
-
 ## Session 5: The full Lyapunov spectrum
 
 **You will learn:** Tangent vectors, QR re-orthogonalisation and why the exponents of a mechanical system add up to zero.
