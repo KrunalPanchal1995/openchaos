@@ -2,7 +2,7 @@
 
 This is the path, not the code. Each milestone says what you learn, what you build, and how you know it works. Pick one and open a pull request. See [CONTRIBUTING.md](../CONTRIBUTING.md).
 
-## Session 5: The full Lyapunov spectrum
+## Session 6: The full Lyapunov spectrum
 
 **You will learn:** Tangent vectors, QR re-orthogonalisation and why the exponents of a mechanical system add up to zero.
 
@@ -11,16 +11,6 @@ This is the path, not the code. Each milestone says what you learn, what you bui
 **Checkpoint (not met by the shipped code):** The four exponents sum to within 0.05 per second of zero, and the largest agrees with the shipped value within 0.15 per second (the shipped code estimates only the largest).
 
 **Difficulty:** advanced
-
-## Session 6: Ensemble forecasts
-
-**You will learn:** Replacing one forecast by a cloud of forecasts, and probabilities instead of paths.
-
-**You will build:** 1000 forecasts from a Gaussian cloud of start errors of 1e-6 rad.
-
-**Checkpoint (not met by the shipped code):** Report the time when the spread of theta2 first exceeds 0.5 rad and the probability that the outer rod has flipped by 20 s; two seeds must agree on the time within 0.5 s (the shipped code gives only a single-run horizon for a 0.1 rad tolerance).
-
-**Difficulty:** intermediate
 
 ## Session 7: A damped, real pendulum
 

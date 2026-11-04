@@ -10,7 +10,7 @@
 \setlength{\parindent}{0pt}
 \begin{document}
 
-\begin{center}{\LARGE\bfseries openchaos}\\[0.4em]{\large See chaos in a double pendulum, in four sessions.}\\[0.2em]\small PAN IIT OSS explainer \textbullet{} secondary school to diploma / undergraduate (levels 3-5)\end{center}
+\begin{center}{\LARGE\bfseries openchaos}\\[0.4em]{\large See chaos in a double pendulum, in five sessions.}\\[0.2em]\small PAN IIT OSS explainer \textbullet{} secondary school to diploma / undergraduate (levels 3-5)\end{center}
 
 \section*{Why this exists}
 A double pendulum obeys exact equations, yet two starts a hundred-millionth of a radian apart end up in completely different places within about fifteen seconds. This explainer shows the mathematics behind that: the equations of motion, the energy checks that prove a simulation right, and the Lyapunov exponent that says how fast errors grow.
@@ -18,12 +18,13 @@ A double pendulum obeys exact equations, yet two starts a hundred-millionth of a
 \section*{The end goal}
 See chaos in a double pendulum. The end goal is to see chaos in a double pendulum: to watch two almost identical motions diverge, to measure the rate of divergence, and to say honestly how long a forecast can be trusted. The same ideas limit weather forecasts, orbit predictions and the control of robot arms.
 
-\section*{How the four sessions build up}
+\section*{How the five sessions build up}
 \begin{enumerate}[nosep]
 \item \textbf{Session 1: Two almost identical starts drift apart} (Level 1, conceptual interactive model, 60 min).
 \item \textbf{Session 2: Equations, energy and a trustworthy simulation} (Level 2, mathematical engineering model, 75 min).
 \item \textbf{Session 3: Measuring chaos and the limits of forecasting} (Level 3, simulation and validation, 90 min).
 \item \textbf{Session 4: A fourth-order symplectic solver} (Level 3, simulation and validation, 90 min).
+\item \textbf{Session 5: Ensemble forecasts: probabilities instead of paths} (Level 3, simulation and validation, 90 min).
 \end{enumerate}
 
 \section{Session 1: Two almost identical starts drift apart}
@@ -245,21 +246,80 @@ Find the three step sizes of the triple jump for h = 0.02 s and check the two or
 
 \subsection*{F. Questions}
 \begin{enumerate}[nosep]
-\item \textbf{Conceptual.} A classmate says: \texttt{}The fourth-order solver is simply better than the midpoint rule: it is just as symplectic and much more accurate.'' Give two reasons why this is too simple.
+\item \textbf{Conceptual.} A classmate says: ``The fourth-order solver is simply better than the midpoint rule: it is just as symplectic and much more accurate.'' Give two reasons why this is too simple.
 \item \textbf{Numerical.} At h = 0.05 s the composition's state error after 0.4 s is 2.75e-4. Predict the error at h = 0.0125 s, and compare the number of midpoint solves per second of simulated time at the two steps. Give a sanity check.
 \item \textbf{Graph and simulation interpretation.} Figure 3 (left) gives, for the typical largest energy error over 60 s, 43,328 evaluations for the midpoint rule and 121,330 for the composition at 1e-2, and for 1e-4 only the composition (192,125). Which solver would you choose for each limit? Why does the composition's curve fall so much faster as the work grows?
 \item \textbf{Design and optimisation challenge.} Design: you need the typical largest energy error of the 120 degree release over 60 s to stay below 1e-4 of E\_ref, with a budget of 200,000 rate evaluations. Choose a solver and a step, check your margin against the step at which the solver fails, and say what you would re-test if the pendulum were released from 150 degrees.
 \end{enumerate}
 
+\section{Session 5: Ensemble forecasts: probabilities instead of paths}
+
+\subsection*{A. Real-world problem}
+Weather services do not give one forecast. They start dozens of forecasts from slightly different versions of today's measurements and report what fraction brings rain. In Session 3 we forecast the double pendulum from one start with one assumed error and found that the forecast fails after a horizon. Today we do what the weather services do: 1000 runs from a Gaussian cloud of start errors of 1e-6 rad. We measure the time when the cloud has spread so far that the path is lost, and we turn the cloud into a probability that the outer rod has flipped by 20 s. And we ask how far that probability can be trusted.
+
+\subsection*{B. Concept and theory}
+An \textbf{ensemble} is a set of N runs (members) that start from the release angles plus a random error with a Gaussian distribution of standard deviation sigma, drawn independently for the two angles. All members use the same equations and the same RK4 step. The \textbf{spread} at time t is the standard deviation of theta2 over the members. At first it equals sigma. While it is small it grows like sigma exp(lambda t), the exponential growth of Session 3, so the slope of ln(spread) estimates lambda. When the spread reaches the size of the motion it saturates. The \textbf{spread time} is the first time the spread exceeds 0.5 rad: after it, members disagree about the position of the outer rod by more than half a radian and no single path can be trusted. The \textbf{flip time} of a member is the first time its outer rod goes over the top (|theta2| above pi). The flip probability P(t) is the fraction of members whose flip time is at most t. With N members it has a \textbf{sampling error} (standard error) sqrt(P (1 - P) / N). It also has a \textbf{numerical error}: RK4's error at step h acts like an extra start error, and chaos amplifies it exactly like the error we put in on purpose, so P can move when h changes even if N is huge. A converged answer is one that stays within the sampling error when the seed changes and when h is halved. Finally, an ensemble answers a question about the cloud: the probability that the cloud has flipped is not the probability that one particular pendulum has.
+
+\begin{itemize}[nosep]
+\item N: number of members (none)
+\item sigma: standard deviation of the start errors (rad)
+\item spread: standard deviation of theta2 over the members (rad)
+\item lambda: growth rate of the spread (1/s)
+\item t\_s: spread time, first time the spread exceeds 0.5 rad (s)
+\item P(t): fraction of members that have flipped by time t (none)
+\item SE: standard error of P (none)
+\item h: time step (s)
+\end{itemize}
+
+\begin{equation*}
+\text{spread}(t)\approx\sigma\,e^{\lambda t}\ \Longleftrightarrow\ \ln\text{spread}=\ln\sigma+\lambda t
+\end{equation*}
+
+\begin{equation*}
+\hat P(t)=\frac{\#\{\text{members with flip time}\le t\}}{N},\qquad \mathrm{SE}=\sqrt{\frac{\hat P(1-\hat P)}{N}}
+\end{equation*}
+
+\begin{equation*}
+N\ge\frac{P(1-P)}{\mathrm{SE}^2}
+\end{equation*}
+
+\begin{center}\includegraphics[width=0.95\linewidth]{figures/s05_ensemble_cloud.png}\\\small Forty of the 1000 forecasts for the 120 degree release, with the cloud mean and its spread.\end{center}
+
+\begin{center}\includegraphics[width=0.8\linewidth]{figures/s05_spread_vs_time.png}\\\small Spread of theta2 over the members: exponential growth from 1e-6 rad, then saturation.\end{center}
+
+\begin{center}\includegraphics[width=0.8\linewidth]{figures/s05_flip_probability.png}\\\small Flip probability for the 95 degree release at three time steps; the grey band is two standard errors.\end{center}
+
+\begin{center}\includegraphics[width=0.95\linewidth]{figures/s05_precision.png}\\\small Spread time and flip probability against the size of the start error.\end{center}
+
+\subsection*{E. Worked example}
+A forecast of the 95 degree release from 1000 members says that 77 percent have flipped by 20 s. What is the sampling standard error and a 95 percent interval? How many members give a standard error of 0.01?
+\begin{enumerate}[nosep]
+\item SE = sqrt(P (1 - P) / N) = sqrt(0.77 x 0.23 / 1000) = sqrt(1.771e-4) = 0.0133.
+\item A 95 percent interval is about plus or minus 1.96 SE = 0.026, so 0.74 to 0.80.
+\item For SE = 0.01: N = P (1 - P) / SE\textasciicircum{}2 = 0.1771 / 0.0001 = 1771, so about 1800 members.
+\item Four times as many members (4000) halve the error: sqrt(0.1771 / 4000) = 0.0067.
+\item Check with the simulation: four different seeds give 0.773, 0.766, 0.780 and 0.781, all within 0.015 of each other, as expected from a standard error of 0.013.
+\end{enumerate}
+\textbf{Answer.} SE = 0.013, interval 0.74 to 0.80, and about 1800 members for SE = 0.01 (the sampling error only).
+
+\subsection*{F. Questions}
+\begin{enumerate}[nosep]
+\item \textbf{Conceptual.} After the spread time, why does a forecaster report a probability instead of a path, and what can still go wrong with that probability?
+\item \textbf{Numerical.} For the 95 degree release the probability of a flip by 20 s is about 0.77 with 1000 members. A report must give it with a standard error of 0.005. How many members are needed, and how long will the run take if 1000 members take 2.3 s? Give a sanity check.
+\item \textbf{Graph and simulation interpretation.} In Figure 3 the probability of a flip by 20 s is 0.708 for h = 0.01 s, 0.773 for 0.005 s and 0.785 for 0.0025 s, with a sampling standard error of 0.013. Can sampling explain the change from 0.01 s to 0.005 s? Which step would you report?
+\item \textbf{Design and optimisation challenge.} Design: you must publish the probability that the outer rod of the 95 degree release has flipped by 20 s, accurate to plus or minus 0.02 with 95 percent confidence. Choose the number of members and the step, say how you will check convergence, and name one thing the number does not cover.
+\end{enumerate}
+
 \section{Real-world mini-project}
 \textbf{How long can you forecast a double pendulum?} A lab can measure the two starting angles of a double pendulum to within 1e-6 rad. Released from rest with both rods at 100, 120 or 140 degrees, for how long does a forecast stay within 0.1 rad of the true motion? Use \texttt{benettin}, \texttt{predicted\_horizon} and \texttt{median\_horizon} from Session 3 (20 random error directions, seed 7).
 
-\textbf{Pick the cheapest solver for a long pendulum run.} You must simulate the 120 degree release for 60 s and keep the typical largest energy error (median over 5 nearby starts, sampled once per second) below 1e-2, 1e-3 or 1e-4 of E\_ref. Use \texttt{ladder\_results} and \texttt{cheapest\_for\_tolerance} with the steps [0.015, 0.0075, 0.0025] for the midpoint rule and [0.02, 0.015, 0.01] for the composition, and count work with \texttt{CALLS}. \textbf{Deliverable:} A script that prints, for each of the three tolerances, the cheapest step and number of rate evaluations for each solver (or \texttt{}not reached''), names the cheaper solver, and finally compares the state error after 5 s for the midpoint rule at h = 0.003125 s with the composition at h = 0.0125 s. \textbf{Success looks like:} For 1e-2 the midpoint rule is cheaper (43,328 against 121,330 evaluations) and also for 1e-3 (72,037 against 144,413); for 1e-4 only the composition reaches it (h = 0.01 s, 192,125 evaluations; the midpoint rule's best is 1.3e-4); and for the state after 5 s the composition's error (3.4e-3 with 13,441 evaluations) is about nine times smaller than the midpoint rule's (3.0e-2 with 11,628).
+\textbf{Pick the cheapest solver for a long pendulum run.} You must simulate the 120 degree release for 60 s and keep the typical largest energy error (median over 5 nearby starts, sampled once per second) below 1e-2, 1e-3 or 1e-4 of E\_ref. Use \texttt{ladder\_results} and \texttt{cheapest\_for\_tolerance} with the steps [0.015, 0.0075, 0.0025] for the midpoint rule and [0.02, 0.015, 0.01] for the composition, and count work with \texttt{CALLS}. \textbf{Deliverable:} A script that prints, for each of the three tolerances, the cheapest step and number of rate evaluations for each solver (or ``not reached''), names the cheaper solver, and finally compares the state error after 5 s for the midpoint rule at h = 0.003125 s with the composition at h = 0.0125 s. \textbf{Success looks like:} For 1e-2 the midpoint rule is cheaper (43,328 against 121,330 evaluations) and also for 1e-3 (72,037 against 144,413); for 1e-4 only the composition reaches it (h = 0.01 s, 192,125 evaluations; the midpoint rule's best is 1.3e-4); and for the state after 5 s the composition's error (3.4e-3 with 13,441 evaluations) is about nine times smaller than the midpoint rule's (3.0e-2 with 11,628).
+
+\textbf{How precise must the instrument be?} A lab can measure the two release angles of the 95 degree pendulum to 1e-4, 1e-6 or 1e-8 rad. Use \texttt{precision\_ladder} (1000 members, h = 0.005 s, seed 1, 30 s) to find, for each, the spread time and the probability of a flip by 20 s with its standard error, and compare the gain from each factor of 100 with ln(100) / lambda. \textbf{Deliverable:} A script that prints, for the three precisions, the spread time, the flip probability by 20 s and its standard error; prints the gain in spread time for each factor of 100 next to ln(100) / lambda with lambda taken from the spread of the 1e-6 run; and says in one sentence whether the 1e-8 instrument makes the 20 s forecast certain. \textbf{Success looks like:} Spread times of 9.8, 13.0 and 17.9 s; flip probabilities 0.98 (error 0.005), 0.77 (0.013) and 0.71 (0.014); gains of 3.2 s and 4.9 s next to ln(100) / lambda = 3.4 s; and the conclusion that even the 1e-8 instrument leaves the cloud spreading before 20 s (spread time 17.9 s), so the forecast is still a probability, not a certainty.
 
 \section{The path ahead}
 \begin{enumerate}[nosep]
-\item \textbf{Session 5: The full Lyapunov spectrum.} All four exponents of the 120 degree release instead of the largest one only.
-\item \textbf{Session 6: Ensemble forecasts.} 1000 forecasts from a Gaussian cloud of start errors of 1e-6 rad.
+\item \textbf{Session 6: The full Lyapunov spectrum.} All four exponents of the 120 degree release instead of the largest one only.
 \item \textbf{Session 7: A damped, real pendulum.} A damped model and a fit routine run on a synthetic measurement.
 \item \textbf{Session 8: Chaos for unequal masses.} Flip-time maps for general masses and rods.
 \end{enumerate}
@@ -296,6 +356,14 @@ Find the three step sizes of the triple jump for h = 0.02 s and check the two or
 \item \textbf{Numerical.} Hint: Order 4: the error scales with h\textasciicircum{}4. The step shrinks by a factor 4. Solution: The step shrinks by 4, so the error shrinks by 4\textasciicircum{}4 = 256: 2.75e-4 / 256 = 1.07e-6 (the lesson measures 1.12e-6). Midpoint solves per second: 3 / 0.05 = 60 at h = 0.05 s and 3 / 0.0125 = 240 at h = 0.0125 s, so four times the work buys 256 times less error. Sanity check: the midpoint rule with the same four-fold work would improve only by 4\textasciicircum{}2 = 16.
 \item \textbf{Graph and simulation interpretation.} Hint: Compare the error at h = 0.02 s and at h = 0.01 s for each solver (composition 1.2e-3 and 5.3e-5; midpoint 1.3e-2 and 3.8e-3). Solution: For 1e-2 choose the midpoint rule: it needs 2.8 times fewer evaluations. For 1e-4 the composition is the only one that gets there on this ladder. The composition falls faster because its error depends on a higher power of h: halving h from 0.02 s to 0.01 s divides its typical error by 23 (order about 4), the midpoint rule's by 3.4 (order about 2). A steeper curve starts more expensive but crosses the flatter one at tight limits (here between 1e-4 and 2e-4). Assumption: one release angle and 60 s; the crossing moves with the start and the run length.
 \item \textbf{Design and optimisation challenge.} Hint: Use the ladder results: the midpoint rule's best is 1.3e-4 at 172,221 evaluations; look at the composition at h = 0.01 s. Solution: The composition at h = 0.01 s gives a typical error of 5.3e-5 with 192,125 evaluations: below 1e-4 and inside the 200,000 budget. The midpoint rule does not reach 1e-4 (1.3e-4 with 172,221 evaluations at h = 0.0025 s). The composition starts to fail at h = 0.03 s, three times larger than the chosen step, a reasonable safety margin. A release from 150 degrees has more energy and faster motion, so the safe step is smaller: run the step survey again (error and number of unsettled solves) and, if needed, reduce h and recompute the budget. Assumption: a single release angle and 60 s; a longer run costs proportionally more evaluations.
+\end{enumerate}
+
+\subsection*{Session 5}
+\begin{enumerate}[nosep]
+\item \textbf{Conceptual.} Hint: Think about what the members do after the spread time, and about the two kinds of error of the probability. Solution: After the spread time the members disagree by more than 0.5 rad, so no single member is more believable than another; the path is lost. The fraction of members that flip, however, is a statistic of the whole cloud and changes smoothly with time, so it can still be estimated. It can go wrong in two ways: the sampling error (too few members, the standard error falls only like 1 / sqrt(N)) and the numerical error (a too coarse step, which moved the 95 degree probability by 0.07). It also assumes the cloud is the right description of what we do not know about the start; if the real error is larger or not Gaussian the probability is wrong whatever N is.
+\item \textbf{Numerical.} Hint: N = P (1 - P) / SE\textasciicircum{}2; the run time is proportional to N. Solution: N = 0.77 x 0.23 / 0.005\textasciicircum{}2 = 0.1771 / 2.5e-5 = 7084, so about 7100 members, and the run takes about 7.1 x 2.3 s = 16 s. Sanity check: the error must fall from 0.0133 to 0.005, a factor 2.66, and the error falls like 1 / sqrt(N), so N must grow by 2.66\textasciicircum{}2 = 7.1.
+\item \textbf{Graph and simulation interpretation.} Hint: Compare the change with the standard error of a difference, about sqrt(2) times the standard error of one value. Solution: The change is 0.065. The standard error of a difference is about sqrt(2) x 0.013 = 0.019, so the change is about 3.5 standard errors: sampling does not explain it; the coarse step changes the result. From 0.005 s to 0.0025 s the change is 0.012, smaller than one standard error of the difference, so the result has converged within the sampling error. Report the finer value, about 0.78 plus or minus 0.03 (two standard errors), and state the step used.
+\item \textbf{Design and optimisation challenge.} Hint: 95 percent confidence is about 2 standard errors, so SE = 0.01. Solution: SE = 0.01 needs N = 0.77 x 0.23 / 0.01\textasciicircum{}2 = 1771, so use at least 1800 members. Use h = 0.005 s, then repeat with h = 0.0025 s and a second seed: the two probabilities must agree within about 0.02, otherwise halve the step again. Report P with both numbers and the step used. The number does not cover anything outside the cloud: measurement bias, a start error larger than 1e-6 rad or not Gaussian, friction, or the fact that the one real pendulum either flips or does not.
 \end{enumerate}
 
 \section{How to join}
